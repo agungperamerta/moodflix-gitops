@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: myapp
+data:
+  NEXT_PUBLIC_TMDB_API_BASE_URL: "https://api.themoviedb.org/3" # Sesuaikan jika beda
+  NEXT_PUBLIC_SUPABASE_URL: "https://ysqqejpjxvjdnmmrloja.supabase.co"
+  NEXT_PUBLIC_APP_URL: "http://100.125.77.115:30080"                  
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: frontend-secret
+  namespace: myapp
+type: Opaque
+stringData:
+  NEXT_PUBLIC_TMDB_API_TOKEN: "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhYWY3MTkyMmJmOWY3OTc1NWRiZTNkN2ZlNWQxYTkzNSIsIm5iZiI6MTc1MTIxNjgxMi4zMTgsInN1YiI6IjY4NjE3MmFjN2JhYmUzNmI3ZDMwM2U3ZSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.tl2jvdWNdW5O_WJus4DHUFrG6oBuwG-7Awfn2TWuwSU"
+  GEMINI_API_KEY: "AIzaSyAKfOFWAjSSrXQLIzKwksl10tRAiDq62yY"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzcXFlanBqeHZqZG5tbXJsb2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTMzNjIsImV4cCI6MjA5NDA4OTM2Mn0.FBPJ2vRpTtcype_C_fd8kNwiSjbOHcWnU1tTd7hMzao"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: myapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend-container
+          image: gumi236/moodflix-v2:d4d4a81  
+          ports:
+            - containerPort: 3000       
+          envFrom:
+            - configMapRef:
+                name: frontend-config
+            - secretRef:
+                name: frontend-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: myapp
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+      nodePort: 30080
